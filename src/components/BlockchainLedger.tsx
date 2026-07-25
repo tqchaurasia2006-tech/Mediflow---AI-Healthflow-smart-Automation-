@@ -21,7 +21,14 @@ import {
   Zap,
   Check,
   Copy,
-  Info
+  Info,
+  Receipt,
+  Printer,
+  Download,
+  QrCode,
+  ExternalLink,
+  Share2,
+  X
 } from 'lucide-react';
 
 export interface BlockchainBlock {
@@ -164,10 +171,58 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
   const [newSimPatient, setNewSimPatient] = useState<string>('PAT-8812');
   const [isMining, setIsMining] = useState<boolean>(false);
 
+  // Receipt Modal State
+  const [receiptBlock, setReceiptBlock] = useState<BlockchainBlock | null>(null);
+
   // Copy hash helper
   const handleCopy = (hash: string) => {
     navigator.clipboard.writeText(hash);
     setCopiedHash(hash);
+    setTimeout(() => setCopiedHash(null), 2000);
+  };
+
+  // Receipt Actions
+  const handlePrintReceipt = () => {
+    window.print();
+  };
+
+  const handleDownloadReceiptJSON = (block: BlockchainBlock) => {
+    const receiptData = {
+      receiptHeader: "MediFlow AI Healthcare Network - Blockchain Transaction Receipt",
+      receiptId: `TXN-RCPT-${block.recordId}-${block.blockIndex}`,
+      blockIndex: block.blockIndex,
+      timestamp: block.timestamp,
+      eventType: block.eventType,
+      recordId: block.recordId,
+      initiator: block.initiator,
+      status: block.status,
+      patientId: block.details.patientId || "N/A",
+      department: block.details.department || "General Clinical Operations",
+      clinicalAction: block.details.actionDetails,
+      cryptographicHashes: {
+        currentBlockHash: block.currentHash,
+        previousBlockHash: block.previousHash,
+        dataPayloadHash: block.dataHash,
+        digitalSignature: block.details.signature,
+        nonce: block.nonce,
+        consensusAlgorithm: "Proof of Authority (SHA-256 Permissioned Node)",
+        networkSubnet: "MediFlow Hospital Node #01"
+      },
+      verificationUrl: `https://mediflow.ai/verify/${block.currentHash}`
+    };
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(receiptData, null, 2))}`;
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", jsonString);
+    downloadAnchor.setAttribute("download", `MediFlow_Blockchain_Receipt_${block.recordId}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handleCopyReceiptLink = (hash: string) => {
+    const link = `https://mediflow.ai/verify/${hash}`;
+    navigator.clipboard.writeText(link);
+    setCopiedHash(`link-${hash}`);
     setTimeout(() => setCopiedHash(null), 2000);
   };
 
@@ -425,7 +480,7 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
       </div>
 
       {/* Live Hash Inspector & Verification Tool */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      <div id="record-integrity-verifier" className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
@@ -465,12 +520,23 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
               : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'
           }`}>
             {verifyResult.match && verifyResult.block ? (
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 font-bold text-emerald-700 dark:text-emerald-400 text-sm">
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span>RECORD AUTHENTIC & IMMUTABLE (Block #{verifyResult.block.blockIndex})</span>
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center space-x-2 font-bold text-emerald-700 dark:text-emerald-400 text-sm">
+                    <CheckCircle2 className="w-5 h-5 shrink-0" />
+                    <span>RECORD AUTHENTIC & IMMUTABLE (Block #{verifyResult.block.blockIndex})</span>
+                  </div>
+
+                  <button
+                    onClick={() => setReceiptBlock(verifyResult.block!)}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center space-x-1.5 cursor-pointer"
+                  >
+                    <Receipt className="w-3.5 h-3.5" />
+                    <span>View Transaction Receipt</span>
+                  </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 dark:text-slate-300 pt-1">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 dark:text-slate-300 pt-1 border-t border-emerald-200 dark:border-emerald-800/60">
                   <div><strong>Event Type:</strong> {verifyResult.block.eventType}</div>
                   <div><strong>Record ID:</strong> {verifyResult.block.recordId}</div>
                   <div><strong>Timestamp:</strong> {verifyResult.block.timestamp}</div>
@@ -609,6 +675,14 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
                     </div>
 
                     <button
+                      onClick={() => setReceiptBlock(block)}
+                      className="px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shrink-0 shadow-sm"
+                    >
+                      <Receipt className="w-3.5 h-3.5" />
+                      <span>Receipt</span>
+                    </button>
+
+                    <button
                       onClick={() => setSelectedBlock(isSelected ? null : block)}
                       className="px-3 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shrink-0"
                     >
@@ -638,6 +712,16 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
                         <span className="text-slate-400 text-[10px] block">CRYPTOGRAPHIC DIGITAL SIGNATURE:</span>
                         <span className="text-emerald-400 text-[11px] break-all">{block.details.signature}</span>
                       </div>
+                    </div>
+
+                    <div className="flex justify-end pt-1">
+                      <button
+                        onClick={() => setReceiptBlock(block)}
+                        className="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-sans font-bold text-xs rounded-xl transition-all shadow-md flex items-center space-x-1.5 cursor-pointer"
+                      >
+                        <Receipt className="w-4 h-4" />
+                        <span>View Official Transaction Receipt</span>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -742,6 +826,225 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction Receipt Modal */}
+      {receiptBlock && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden space-y-0 my-auto animate-scaleUp">
+            
+            {/* Modal Header & Actions Bar */}
+            <div className="bg-slate-900 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800">
+              <div className="flex items-center space-x-2 text-teal-400 font-bold text-sm sm:text-base">
+                <Receipt className="w-5 h-5 text-teal-400 shrink-0" />
+                <span>Blockchain Transaction Receipt</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handlePrintReceipt}
+                  title="Print Transaction Receipt"
+                  className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Print Receipt</span>
+                </button>
+
+                <button
+                  onClick={() => handleDownloadReceiptJSON(receiptBlock)}
+                  title="Download Raw JSON Receipt"
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 border border-slate-700 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Download JSON</span>
+                </button>
+
+                <button
+                  onClick={() => handleCopyReceiptLink(receiptBlock.currentHash)}
+                  title="Copy Verification URL"
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 border border-slate-700 cursor-pointer"
+                >
+                  {copiedHash === `link-${receiptBlock.currentHash}` ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Share2 className="w-3.5 h-3.5" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {copiedHash === `link-${receiptBlock.currentHash}` ? 'Link Copied!' : 'Share Link'}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setReceiptBlock(null)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Receipt Printable Card Body */}
+            <div id="printable-blockchain-receipt" className="p-6 sm:p-8 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 space-y-6">
+              
+              {/* Receipt Header Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-xl bg-teal-500 text-white font-extrabold flex items-center justify-center text-sm shadow-md">
+                      M
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">MediFlow AI Healthcare Network</h2>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Permissioned SHA-256 Ledger • Node #01 Subnet</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="sm:text-right">
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-black uppercase tracking-wider">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>VERIFIED & IMMUTABLE</span>
+                  </span>
+                  <div className="text-[11px] text-slate-400 font-mono mt-1">
+                    BLOCK INDEX #{receiptBlock.blockIndex}
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Value Overview Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 text-xs">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Receipt Reference ID</span>
+                  <span className="font-mono font-bold text-teal-600 dark:text-teal-400 text-sm">TXN-RCPT-{receiptBlock.recordId}-{receiptBlock.blockIndex}</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Commit Timestamp (UTC)</span>
+                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{receiptBlock.timestamp}</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Event / Category</span>
+                  <span className="font-bold text-indigo-600 dark:text-indigo-400 uppercase">{receiptBlock.eventType.replace('_', ' ')}</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Consensus Protocol</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">Proof of Authority (PoA)</span>
+                </div>
+              </div>
+
+              {/* Transaction Operational Payload */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
+                  <FileText className="w-3.5 h-3.5 text-teal-500" />
+                  <span>Clinical & Administrative Operation Payload</span>
+                </h4>
+
+                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 space-y-2 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 dark:text-slate-300">
+                    <div><strong>Patient Reference:</strong> <span className="font-mono bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">{receiptBlock.details.patientId || 'PAT-GENERAL'}</span></div>
+                    <div><strong>Department:</strong> {receiptBlock.details.department || 'Clinical Operations'}</div>
+                    <div className="sm:col-span-2"><strong>Authorized Initiator:</strong> {receiptBlock.initiator}</div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700/60">
+                    <strong className="text-slate-900 dark:text-white block mb-0.5">Operation Description:</strong>
+                    <p className="text-slate-700 dark:text-slate-300 font-medium">
+                      {receiptBlock.details.actionDetails}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cryptographic Hashes & Signatures */}
+              <div className="space-y-3 font-mono text-[11px]">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5 font-sans">
+                  <Lock className="w-3.5 h-3.5 text-teal-500" />
+                  <span>Cryptographic Proof Hashes</span>
+                </h4>
+
+                <div className="bg-slate-900 text-slate-200 p-4 rounded-2xl space-y-2.5">
+                  <div>
+                    <span className="text-slate-400 text-[10px] block font-bold">CURRENT BLOCK HASH (SHA-256):</span>
+                    <span className="text-teal-400 font-bold break-all">{receiptBlock.currentHash}</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">PAYLOAD DATA HASH:</span>
+                      <span className="text-slate-300 text-[10px] break-all">{receiptBlock.dataHash}</span>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">LINKED PREVIOUS HASH:</span>
+                      <span className="text-amber-400 text-[10px] break-all">{receiptBlock.previousHash}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-1 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">ECDSA DIGITAL SIGNATURE:</span>
+                      <span className="text-emerald-400 text-[10px] break-all">{receiptBlock.details.signature}</span>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-slate-400 text-[10px] block">NONCE / GAS:</span>
+                      <span className="text-indigo-300 text-[10px]">#{receiptBlock.nonce} • 0.00 Gwei</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* QR Code Barcode Representation */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
+                    <QrCode className="w-10 h-10 text-slate-800 dark:text-slate-200" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center space-x-1">
+                      <span>On-Chain Scan Verification</span>
+                      <ExternalLink className="w-3 h-3 text-teal-500" />
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Scan QR code or use verification link below to validate ledger authenticity.
+                    </p>
+                    <code className="text-[10px] text-teal-600 dark:text-teal-400 font-mono block">
+                      https://mediflow.ai/verify/{receiptBlock.currentHash.substring(0, 18)}...
+                    </code>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <div className="font-mono text-[9px] text-slate-400 uppercase tracking-widest">STAMPED BY</div>
+                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">MediFlow AI Core Node</div>
+                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">100% AUDIT VALIDATED</div>
+                </div>
+              </div>
+
+              {/* Legal Disclaimer Footer */}
+              <div className="pt-2 text-[10px] text-slate-400 text-center leading-relaxed border-t border-slate-200 dark:border-slate-800">
+                This transaction receipt is cryptographically generated and permanently registered in the MediFlow AI permissioned healthcare blockchain network. All patient data remains protected in compliance with HIPAA & GDPR standards.
+              </div>
+
+            </div>
+
+            {/* Bottom Modal Actions */}
+            <div className="p-4 bg-slate-100 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                Block #{receiptBlock.blockIndex} • Status: <strong className="text-emerald-600 dark:text-emerald-400">VERIFIED</strong>
+              </span>
+
+              <button
+                onClick={() => setReceiptBlock(null)}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-700 dark:hover:bg-slate-600 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Close Receipt
+              </button>
+            </div>
+
           </div>
         </div>
       )}

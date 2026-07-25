@@ -43,7 +43,10 @@ import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('landing');
   const [currentRole, setRole] = useState<UserRole>('PATIENT');
-  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('mediflow_theme');
+    return saved ? saved === 'dark' : false;
+  });
 
   // Authenticated User Profile in Firestore
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
@@ -58,12 +61,14 @@ export default function App() {
 
   const [isChatbotOpen, setIsChatbotOpen] = useState<boolean>(false);
 
-  // Sync Dark Mode class on body
+  // Sync Dark Mode class on body and store preference
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('mediflow_theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('mediflow_theme', 'light');
     }
   }, [darkMode]);
 

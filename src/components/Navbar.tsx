@@ -281,13 +281,24 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Dark Mode Toggle */}
+            {/* Light / Dark Mode Real-time Theme Toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}
-              aria-label="Toggle dark mode"
-              className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label="Toggle light and dark mode theme in real time"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30"
             >
-              {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+              {darkMode ? (
+                <>
+                  <Sun className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="text-xs font-bold hidden sm:inline text-amber-400">Light</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
+                  <span className="text-xs font-bold hidden sm:inline text-slate-700">Dark</span>
+                </>
+              )}
             </button>
           </div>
         </div>
