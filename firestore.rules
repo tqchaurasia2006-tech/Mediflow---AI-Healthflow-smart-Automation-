@@ -30,5 +30,9 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       allow read, write: if true;
     }
+
+    match /blockchain_blocks/{blockId} {
+      allow read, write: if true;
+    }
   }
 }

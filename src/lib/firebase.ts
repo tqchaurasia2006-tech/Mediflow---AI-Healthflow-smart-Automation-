@@ -27,6 +27,7 @@ import {
 import firebaseConfigData from '../../firebase-applet-config.json';
 import { Doctor, Bed, Appointment, MedicineReminder, NotificationItem, UserRole } from '../types';
 import { INITIAL_DOCTORS, INITIAL_BEDS, INITIAL_APPOINTMENTS, INITIAL_REMINDERS, INITIAL_NOTIFICATIONS } from '../data/mockData';
+import { BlockchainBlock, INITIAL_BLOCKS } from '../components/BlockchainLedger';
 
 const firebaseConfig = {
   apiKey: firebaseConfigData.apiKey,
@@ -157,6 +158,15 @@ export async function seedInitialFirestoreData() {
         await setDoc(doc(db, 'notifications', n.id), cleanDataForFirestore(n));
       }
       console.log('Seeded notifications to Firestore');
+    }
+
+    // 6. Blockchain Blocks
+    const blockSnap = await getDocs(collection(db, 'blockchain_blocks'));
+    if (blockSnap.empty) {
+      for (const blk of INITIAL_BLOCKS) {
+        await setDoc(doc(db, 'blockchain_blocks', 'blk-' + blk.blockIndex), cleanDataForFirestore(blk));
+      }
+      console.log('Seeded blockchain_blocks to Firestore');
     }
   } catch (error) {
     console.warn("Firestore seeding check note:", error);
@@ -327,5 +337,32 @@ export async function markNotificationReadInFirestore(id: string) {
     await setDoc(ref, { read: true }, { merge: true });
   } catch (err) {
     console.error("Error marking notification read in Firestore:", err);
+  }
+}
+
+export function subscribeToBlockchainBlocks(callback: (blocks: BlockchainBlock[]) => void) {
+  if (!db) return () => {};
+  const q = collection(db, 'blockchain_blocks');
+  return onSnapshot(q, (snapshot) => {
+    const list: BlockchainBlock[] = [];
+    snapshot.forEach((docSnap) => {
+      list.push(docSnap.data() as BlockchainBlock);
+    });
+    if (list.length > 0) {
+      // Sort by blockIndex ascending
+      list.sort((a, b) => a.blockIndex - b.blockIndex);
+      callback(list);
+    }
+  }, (err) => {
+    console.warn("Blockchain blocks realtime sync warning:", err);
+  });
+}
+
+export async function addBlockToFirestore(block: BlockchainBlock) {
+  if (!db) return;
+  try {
+    await setDoc(doc(db, 'blockchain_blocks', 'blk-' + block.blockIndex), cleanDataForFirestore(block));
+  } catch (err) {
+    console.error("Error adding blockchain block to Firestore:", err);
   }
 }

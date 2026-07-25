@@ -127,7 +127,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-teal-500" />
-              <span>AI Symptom Triage</span>
+              <span>AI Symptom Assessment</span>
               {!isAuthenticated && <Lock className="w-3 h-3 text-amber-500 ml-0.5" />}
             </button>
 
@@ -181,6 +181,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Bed className="w-3.5 h-3.5" />
               <span>Bed Matrix</span>
               {!isAuthenticated && <Lock className="w-3 h-3 text-amber-500 ml-0.5" />}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('blockchain')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center space-x-1.5 ${
+                activeTab === 'blockchain'
+                  ? 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/50 font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-teal-500" />
+              <span>Blockchain Security</span>
             </button>
           </nav>
 
@@ -292,7 +304,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             activeTab === 'triage' ? 'bg-teal-600 text-white' : 'text-slate-600 dark:text-slate-400'
           }`}
         >
-          AI Triage
+          AI Assessment
         </button>
         <button
           onClick={() => setActiveTab('patient')}
@@ -325,6 +337,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           Beds
+        </button>
+        <button
+          onClick={() => setActiveTab('blockchain')}
+          className={`px-2.5 py-1 rounded-md text-[11px] font-medium ${
+            activeTab === 'blockchain' ? 'bg-teal-600 text-white' : 'text-slate-600 dark:text-slate-400'
+          }`}
+        >
+          Blockchain
         </button>
       </div>
     </header>

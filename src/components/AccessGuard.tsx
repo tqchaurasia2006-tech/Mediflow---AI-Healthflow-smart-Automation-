@@ -35,7 +35,7 @@ export const AccessGuard: React.FC<AccessGuardProps> = ({
             Authentication Required
           </h2>
           <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-            Access to <strong>{featureName}</strong> is restricted to authorized MediFlow users. Please sign in or create an account to access patient records, triage, or clinical systems.
+            Access to <strong>{featureName}</strong> is restricted to authorized MediFlow users. Please sign in or create an account to access patient records, clinical assessments, or hospital systems.
           </p>
         </div>
 

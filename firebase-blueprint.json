@@ -102,6 +102,25 @@
         "read": { "type": "boolean" }
       },
       "required": ["title", "message", "type"]
+    },
+    "blockchain_blocks": {
+      "title": "Blockchain Blocks",
+      "description": "Immutable ledger blocks for clinical and operational actions",
+      "type": "object",
+      "properties": {
+        "blockIndex": { "type": "number" },
+        "timestamp": { "type": "string" },
+        "eventType": { "type": "string" },
+        "recordId": { "type": "string" },
+        "initiator": { "type": "string" },
+        "dataHash": { "type": "string" },
+        "previousHash": { "type": "string" },
+        "currentHash": { "type": "string" },
+        "nonce": { "type": "number" },
+        "status": { "type": "string" },
+        "details": { "type": "object" }
+      },
+      "required": ["blockIndex", "eventType", "currentHash"]
     }
   }
 }

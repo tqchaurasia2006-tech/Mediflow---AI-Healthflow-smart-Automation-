@@ -6,6 +6,7 @@ import { SymptomTriageOrchestrator } from './components/SymptomTriageOrchestrato
 import { PatientDashboard } from './components/PatientDashboard';
 import { DoctorDashboard } from './components/DoctorDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
+import { BlockchainLedger, BlockchainBlock, INITIAL_BLOCKS } from './components/BlockchainLedger';
 import { AIChatbot } from './components/AIChatbot';
 import { AccessGuard } from './components/AccessGuard';
 import { 
@@ -26,6 +27,7 @@ import {
   subscribeToAppointments,
   subscribeToReminders,
   subscribeToNotifications,
+  subscribeToBlockchainBlocks,
   addAppointmentToFirestore,
   updateAppointmentStatusInFirestore,
   updateBedStatusInFirestore,
@@ -33,7 +35,8 @@ import {
   addReminderToFirestore,
   toggleReminderTakenInFirestore,
   addNotificationToFirestore,
-  markNotificationReadInFirestore
+  markNotificationReadInFirestore,
+  addBlockToFirestore
 } from './lib/firebase';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 
@@ -51,6 +54,7 @@ export default function App() {
   const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
   const [reminders, setReminders] = useState<MedicineReminder[]>(INITIAL_REMINDERS);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [blockchainBlocks, setBlockchainBlocks] = useState<BlockchainBlock[]>(INITIAL_BLOCKS);
 
   const [isChatbotOpen, setIsChatbotOpen] = useState<boolean>(false);
 
@@ -62,6 +66,46 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  // Helper to record a new block onto the blockchain and publish to Firestore
+  const recordBlockchainBlock = (
+    eventType: 'TRIAGE_SESSION' | 'PRESCRIPTION_SIGN' | 'BED_ALLOCATION' | 'PATIENT_CONSENT',
+    actionDetails: string,
+    recordId?: string,
+    initiator?: string,
+    patientId?: string,
+    department?: string
+  ) => {
+    setBlockchainBlocks(prev => {
+      const prevBlock = prev.length > 0 ? prev[prev.length - 1] : INITIAL_BLOCKS[INITIAL_BLOCKS.length - 1];
+      const newIndex = prevBlock ? prevBlock.blockIndex + 1 : 0;
+      const randomHex = () => Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+      const mockCurrentHash = `0x${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}`;
+      const mockDataHash = `0x${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}`;
+
+      const newBlock: BlockchainBlock = {
+        blockIndex: newIndex,
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
+        eventType,
+        recordId: recordId || `TX-${Math.floor(10000 + Math.random() * 90000)}`,
+        initiator: initiator || currentUserProfile?.displayName || 'MediFlow Active Node',
+        dataHash: mockDataHash,
+        previousHash: prevBlock ? prevBlock.currentHash : '0x0000000000000000000000000000000000000000000000000000000000000000',
+        currentHash: mockCurrentHash,
+        nonce: Math.floor(10000 + Math.random() * 80000),
+        status: 'VERIFIED',
+        details: {
+          patientId: patientId || currentUserProfile?.uid || 'PAT-ACTIVE',
+          department: department || 'Hospital Operations',
+          actionDetails,
+          signature: `0xSIG_REALTIME_NODE_${Math.floor(1000 + Math.random() * 9000)}`
+        }
+      };
+
+      addBlockToFirestore(newBlock);
+      return [...prev, newBlock];
+    });
+  };
 
   // Initial Firestore Seeding and Auth State Listener
   useEffect(() => {
@@ -83,8 +127,6 @@ export default function App() {
           };
           setCurrentUserProfile(fallbackProfile);
         }
-      } else {
-        // Not logged into Firebase Auth
       }
     }) : () => {};
 
@@ -94,6 +136,11 @@ export default function App() {
     const unsubApts = subscribeToAppointments((aptList) => setAppointments(aptList));
     const unsubRems = subscribeToReminders((remList) => setReminders(remList));
     const unsubNotifs = subscribeToNotifications((notifList) => setNotifications(notifList));
+    const unsubBlocks = subscribeToBlockchainBlocks((blockList) => {
+      if (blockList && blockList.length > 0) {
+        setBlockchainBlocks(blockList);
+      }
+    });
 
     return () => {
       unsubscribeAuth();
@@ -102,6 +149,7 @@ export default function App() {
       unsubApts();
       unsubRems();
       unsubNotifs();
+      unsubBlocks();
     };
   }, []);
 
@@ -109,6 +157,16 @@ export default function App() {
   const handleLoginSuccess = (profile: UserProfile) => {
     setCurrentUserProfile(profile);
     setRole(profile.role);
+
+    // Record Realtime Blockchain Login Event
+    recordBlockchainBlock(
+      'PATIENT_CONSENT',
+      `User Session Authenticated: ${profile.displayName} logged in as ${profile.role} (ECDSA Auth Token Verified)`,
+      `AUTH-${profile.uid.substring(0, 8).toUpperCase()}`,
+      profile.displayName,
+      profile.uid,
+      'Security & Authentication'
+    );
   };
 
   // Sign Out Handler
@@ -145,6 +203,16 @@ export default function App() {
     setAppointments(prev => [newApt, ...prev]);
     await addAppointmentToFirestore(newApt);
 
+    // Record Realtime Blockchain Block
+    recordBlockchainBlock(
+      'TRIAGE_SESSION',
+      `Care Assessment & Appointment Booked: ${newApt.patientName} with ${newApt.doctorName} (${newApt.department}, Priority: ${newApt.priority}, Slot: ${newApt.timeSlot})`,
+      newApt.id.toUpperCase(),
+      currentUserProfile?.displayName || 'AI Care Assessment Orchestrator',
+      newApt.patientId,
+      newApt.department
+    );
+
     // Dispatch system notification
     const newNotif: NotificationItem = {
       id: 'notif-' + Date.now(),
@@ -162,6 +230,16 @@ export default function App() {
   const handleUpdateAppointmentStatus = async (id: string, status: Appointment['status'], bedAssigned?: string) => {
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status, bedAssigned: bedAssigned || a.bedAssigned } : a));
     await updateAppointmentStatusInFirestore(id, status, bedAssigned);
+
+    // Record Realtime Blockchain Block
+    recordBlockchainBlock(
+      'PRESCRIPTION_SIGN',
+      `Clinical Record Updated: Appointment ${id} status set to ${status}${bedAssigned ? `, Bed Assigned: ${bedAssigned}` : ''}`,
+      id.toUpperCase(),
+      currentUserProfile?.displayName || 'Doctor / Care Provider',
+      'PAT-RECORD',
+      'Clinical Care'
+    );
   };
 
   // Bed Status Manager
@@ -174,14 +252,35 @@ export default function App() {
       admissionDate: status === 'OCCUPIED' ? new Date().toISOString().split('T')[0] : undefined
     } : b));
     await updateBedStatusInFirestore(bedId, status, patientName, doctorName);
+
+    // Record Realtime Blockchain Block
+    recordBlockchainBlock(
+      'BED_ALLOCATION',
+      `Bed Allocation Shift: Bed ${bedId} status mutated to ${status}${patientName ? ` (Patient: ${patientName})` : ''}${doctorName ? ` (Doctor: ${doctorName})` : ''}`,
+      `BED-${bedId}`,
+      currentUserProfile?.displayName || 'Hospital Admin Hub',
+      'PAT-BED',
+      'Inpatient Bed Matrix'
+    );
   };
 
   // Doctor Shift Availability Toggle
   const handleToggleDoctorAvailability = async (doctorId: string) => {
     const docItem = doctors.find(d => d.id === doctorId);
     if (docItem) {
-      setDoctors(prev => prev.map(d => d.id === doctorId ? { ...d, isAvailable: !d.isAvailable } : d));
+      const nextAvailable = !docItem.isAvailable;
+      setDoctors(prev => prev.map(d => d.id === doctorId ? { ...d, isAvailable: nextAvailable } : d));
       await toggleDoctorAvailabilityInFirestore(doctorId, docItem.isAvailable);
+
+      // Record Realtime Blockchain Block
+      recordBlockchainBlock(
+        'PRESCRIPTION_SIGN',
+        `Doctor Shift Status: ${docItem.name} (${docItem.specialty}) toggled availability to ${nextAvailable ? 'AVAILABLE & ON DUTY' : 'OFF DUTY'}`,
+        `DOC-${doctorId}`,
+        docItem.name,
+        'N/A',
+        docItem.department
+      );
     }
   };
 
@@ -195,8 +294,19 @@ export default function App() {
   const handleToggleReminderTaken = async (id: string) => {
     const remItem = reminders.find(r => r.id === id);
     if (remItem) {
-      setReminders(prev => prev.map(r => r.id === id ? { ...r, takenToday: !r.takenToday } : r));
+      const nextTaken = !remItem.takenToday;
+      setReminders(prev => prev.map(r => r.id === id ? { ...r, takenToday: nextTaken } : r));
       await toggleReminderTakenInFirestore(id, remItem.takenToday);
+
+      // Record Realtime Blockchain Block
+      recordBlockchainBlock(
+        'PATIENT_CONSENT',
+        `Medication Adherence Sync: ${remItem.medicineName} (${remItem.dosage}) marked as ${nextTaken ? 'TAKEN' : 'UNTAKEN'}`,
+        `REM-${id}`,
+        currentUserProfile?.displayName || 'Patient Portal',
+        currentUserProfile?.uid || 'PAT-MED',
+        'Pharmacy & Adherence'
+      );
     }
   };
 
@@ -211,6 +321,16 @@ export default function App() {
     };
     setReminders(prev => [...prev, newRem]);
     await addReminderToFirestore(newRem);
+
+    // Record Realtime Blockchain Block
+    recordBlockchainBlock(
+      'PATIENT_CONSENT',
+      `New Medication Prescription Registered: ${newRem.medicineName} (${newRem.dosage}, ${newRem.timeSlot})`,
+      newRem.id.toUpperCase(),
+      currentUserProfile?.displayName || 'Patient / Prescriber',
+      currentUserProfile?.uid || 'PAT-MED',
+      'Pharmacy & Adherence'
+    );
   };
 
   return (
@@ -258,7 +378,7 @@ export default function App() {
             {!currentUserProfile ? (
               <AccessGuard
                 currentUserProfile={currentUserProfile}
-                featureName="AI Symptom Triage"
+                featureName="AI Symptom Assessment"
                 onGoToLogin={() => setActiveTab('landing')}
                 onGoToAllowedPortal={(role) => setActiveTab(role === 'DOCTOR' ? 'doctor' : role === 'ADMIN' ? 'admin' : 'patient')}
                 onSignOut={handleSignOut}
@@ -365,6 +485,24 @@ export default function App() {
                 onConfirmAppointment={(aptId) => handleUpdateAppointmentStatus(aptId, 'CONFIRMED')}
               />
             )}
+          </div>
+        )}
+
+        {activeTab === 'blockchain' && (
+          <div className="px-4 sm:px-6 lg:px-8">
+            <BlockchainLedger 
+              blocks={blockchainBlocks} 
+              onAddBlock={(newBlk) => {
+                recordBlockchainBlock(
+                  newBlk.eventType, 
+                  newBlk.details.actionDetails, 
+                  newBlk.recordId, 
+                  newBlk.initiator, 
+                  newBlk.details.patientId, 
+                  newBlk.details.department
+                );
+              }} 
+            />
           </div>
         )}
       </main>

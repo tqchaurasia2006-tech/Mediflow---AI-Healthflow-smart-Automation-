@@ -113,7 +113,7 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Left Column: Triage Queue sorted by Emergency Level */}
+        {/* Left Column: Assessment Queue sorted by Emergency Level */}
         <div className="lg:col-span-5 space-y-4">
           
           <div className="flex items-center justify-between">
@@ -183,7 +183,7 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
           </div>
         </div>
 
-        {/* Right Column: Active Patient Medical Detail & AI Triage Summary */}
+        {/* Right Column: Active Patient Medical Detail & AI Assessment Summary */}
         <div className="lg:col-span-7 space-y-6">
           {selectedApt ? (
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
@@ -339,7 +339,7 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
             </div>
           ) : (
             <div className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-10 border border-dashed border-slate-200 dark:border-slate-800 text-center text-slate-400 text-xs">
-              Select a patient from the queue on the left to inspect clinical triage data.
+              Select a patient from the queue on the left to inspect clinical assessment data.
             </div>
           )}
         </div>

@@ -35,7 +35,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
       highlights: [
         'Visiting Hours: 8:00 AM - 8:00 PM Daily',
         'Emergency Intake: 24/7 Floor 1 East Wing',
-        'AI Triage: Automated priority assessment available'
+        'AI Care Assessment: Automated priority evaluation available'
       ]
     }
   ]);
@@ -194,7 +194,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
                     }}
                     className="px-2 py-0.5 bg-teal-600 text-white rounded font-semibold text-[10px]"
                   >
-                    Triage Now
+                    Assess Symptoms Now
                   </button>
                 </div>
               )}

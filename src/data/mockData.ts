@@ -160,7 +160,7 @@ export const INITIAL_REMINDERS: MedicineReminder[] = [
 ];
 
 export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  { id: 'notif-1', title: 'Emergency AI Alert', message: 'High priority triage case flagged for ER Bay 01 (Jessica Taylor - Potential ACS).', time: '10 mins ago', type: 'EMERGENCY', read: false },
+  { id: 'notif-1', title: 'Emergency AI Alert', message: 'High priority assessment case flagged for ER Bay 01 (Jessica Taylor - Potential ACS).', time: '10 mins ago', type: 'EMERGENCY', read: false },
   { id: 'notif-2', title: 'Appointment Confirmed', message: 'Your consult with Dr. Sarah Jenkins is scheduled for 10:15 AM.', time: '1 hour ago', type: 'APPOINTMENT', read: false },
   { id: 'notif-3', title: 'Medicine Reminder', message: 'Time for Lisinopril 10mg (01:00 PM dosage due soon).', time: '2 hours ago', type: 'REMINDER', read: true }
 ];

@@ -45,7 +45,7 @@ export const SymptomTriageOrchestrator: React.FC<SymptomTriageOrchestratorProps>
     { title: 'Symptom Analysis AI', desc: 'Parsing clinical natural language' },
     { title: 'Disease Prediction AI', desc: 'Running differential diagnostic models' },
     { title: 'Department Recommendation AI', desc: 'Matching specialized hospital department' },
-    { title: 'Priority Classification AI', desc: 'Assigning emergency triage urgency' },
+    { title: 'Priority Classification AI', desc: 'Assigning emergency care urgency' },
     { title: 'Appointment Scheduler', desc: 'Finding optimal specialist doctor' },
   ];
 
@@ -137,7 +137,7 @@ export const SymptomTriageOrchestrator: React.FC<SymptomTriageOrchestratorProps>
               <span>Multi-Stage Gemini AI Engine</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              AI Symptom Triage & Priority Orchestrator
+              AI Symptom Assessment & Care Orchestrator
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
               Describe your symptoms naturally. The AI Orchestrator executes differential analysis, assigns emergency priority, and routes you directly to the correct department.
@@ -288,12 +288,12 @@ export const SymptomTriageOrchestrator: React.FC<SymptomTriageOrchestratorProps>
                 {isOrchestrating ? (
                   <>
                     <Activity className="w-4 h-4 animate-spin" />
-                    <span>Orchestrating Triage Pipeline...</span>
+                    <span>Orchestrating Assessment Pipeline...</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    <span>Run AI Triage & Orchestration</span>
+                    <span>Run AI Symptom Assessment</span>
                   </>
                 )}
               </button>
@@ -335,14 +335,14 @@ export const SymptomTriageOrchestrator: React.FC<SymptomTriageOrchestratorProps>
             </div>
           )}
 
-          {/* Clinical Triage Output Card */}
+          {/* Clinical Assessment Output Card */}
           {!isOrchestrating && triageResult && (
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
               
               {/* Top Banner with Priority Tag */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-5">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Triage ID: {triageResult.id}</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assessment ID: {triageResult.id}</span>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
                     Recommended Department: <span className="text-teal-600 dark:text-teal-400">{triageResult.recommendedDepartment}</span>
                   </h3>

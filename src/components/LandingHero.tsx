@@ -245,7 +245,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                     <UserCheck className="w-5 h-5 text-teal-400 shrink-0" />
                     <div>
                       <div className="text-xs font-bold">Patient Portal</div>
-                      <div className="text-[10px] text-slate-400">Triage & Reminders</div>
+                      <div className="text-[10px] text-slate-400">Assessment & Reminders</div>
                     </div>
                   </button>
 
@@ -341,16 +341,16 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                     <div className="space-y-3">
                       <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 text-xs font-semibold">
                         <UserCheck className="w-4 h-4" />
-                        <span>Patient Portal & Triage</span>
+                        <span>Patient Portal & Care Assessment</span>
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white">Patient Domain Access</h3>
                       <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                        Access AI Symptom Triage, check upcoming specialist appointments, manage daily medicine dosages, and review consultation summaries.
+                        Access AI Symptom Assessment, check upcoming specialist appointments, manage daily medicine dosages, and review consultation summaries.
                       </p>
                       <ul className="space-y-2 pt-2">
                         <li className="text-xs text-slate-700 dark:text-slate-300 flex items-center space-x-2">
                           <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                          <span>AI Powered Symptom Triage Analysis</span>
+                          <span>AI Powered Symptom Assessment Analysis</span>
                         </li>
                         <li className="text-xs text-slate-700 dark:text-slate-300 flex items-center space-x-2">
                           <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
@@ -377,7 +377,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                       <ul className="space-y-2 pt-2">
                         <li className="text-xs text-slate-700 dark:text-slate-300 flex items-center space-x-2">
                           <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                          <span>AI Triage Emergency Prioritization</span>
+                          <span>AI Emergency Care Prioritization</span>
                         </li>
                         <li className="text-xs text-slate-700 dark:text-slate-300 flex items-center space-x-2">
                           <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
