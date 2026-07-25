@@ -14,6 +14,7 @@ import {
   Minimize2
 } from 'lucide-react';
 import { ChatMessage } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface AIChatbotProps {
   isOpen: boolean;
@@ -26,11 +27,16 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
   onClose,
   onNavigateToTriage,
 }) => {
+  const { t, language } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-1',
       sender: 'ai',
-      text: 'Hello! I am MediBot, your AI Healthcare Assistant for MediFlow. How can I assist you today with hospital services or symptom questions?',
+      text: language === 'hi' 
+        ? 'नमस्ते! मैं मेडीबॉट हूँ, आपका एआई स्वास्थ्य सहायक। आज मैं अस्पताल सेवाओं या लक्षणों के बारे में आपकी क्या सहायता कर सकता हूँ?' 
+        : language === 'dual'
+        ? 'Hello! नमस्ते! I am MediBot, your AI Healthcare Assistant (एआई स्वास्थ्य सहायक). How can I assist you with hospital services or symptoms?'
+        : 'Hello! I am MediBot, your AI Healthcare Assistant for MediFlow. How can I assist you today with hospital services or symptom questions?',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       highlights: [
         'Visiting Hours: 8:00 AM - 8:00 PM Daily',
@@ -225,7 +231,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Ask medical question or hospital info..."
+            placeholder={t('chat.placeholder', 'Ask medical question or hospital info...')}
             className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
           <button

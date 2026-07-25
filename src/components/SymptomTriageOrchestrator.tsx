@@ -15,6 +15,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { SymptomAnalysisResult, Doctor, Appointment, PriorityLevel } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SymptomTriageOrchestratorProps {
   doctors: Doctor[];
@@ -27,6 +28,7 @@ export const SymptomTriageOrchestrator: React.FC<SymptomTriageOrchestratorProps>
   onBookAppointment,
   onNavigateToDoctorPortal,
 }) => {
+  const { t } = useLanguage();
   const [symptoms, setSymptoms] = useState('');
   const [duration, setDuration] = useState('1 hour');
   const [age, setAge] = useState(42);
@@ -137,10 +139,10 @@ export const SymptomTriageOrchestrator: React.FC<SymptomTriageOrchestratorProps>
               <span>Multi-Stage Gemini AI Engine</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              AI Symptom Assessment & Care Orchestrator
+              {t('triage.title', 'AI Symptom Assessment & Care Orchestrator')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-              Describe your symptoms naturally. The AI Orchestrator executes differential analysis, assigns emergency priority, and routes you directly to the correct department.
+              {t('triage.desc', 'Describe your symptoms naturally. The AI Orchestrator executes differential analysis, assigns emergency priority, and routes you directly to the correct department.')}
             </p>
           </div>
           <div className="flex items-center space-x-2 bg-slate-800/80 p-3 rounded-2xl border border-slate-700/80">
@@ -288,12 +290,12 @@ export const SymptomTriageOrchestrator: React.FC<SymptomTriageOrchestratorProps>
                 {isOrchestrating ? (
                   <>
                     <Activity className="w-4 h-4 animate-spin" />
-                    <span>Orchestrating Assessment Pipeline...</span>
+                    <span>{t('triage.orchestrating', 'Orchestrating Assessment Pipeline...')}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    <span>Run AI Symptom Assessment</span>
+                    <span>{t('triage.runButton', 'Run AI Symptom Assessment')}</span>
                   </>
                 )}
               </button>

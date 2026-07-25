@@ -33,6 +33,7 @@ import {
   createUserWithEmailAndPassword, 
   signOut as firebaseSignOut 
 } from 'firebase/auth';
+import { useLanguage } from '../context/LanguageContext';
 
 interface LandingHeroProps {
   onStartTriage: () => void;
@@ -57,6 +58,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
   onLoginSuccess,
   onSignOut,
 }) => {
+  const { t } = useLanguage();
   // Domain Tab selection for Login Portal (PATIENT | DOCTOR | ADMIN)
   const [selectedDomain, setSelectedDomain] = useState<UserRole>('PATIENT');
   const [isRegisterMode, setIsRegisterMode] = useState<boolean>(false);
@@ -194,11 +196,11 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             {/* Top Badge */}
             <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-teal-500/10 dark:bg-teal-500/20 border border-teal-500/30 text-teal-700 dark:text-teal-300 text-xs font-semibold backdrop-blur">
               <Sparkles className="w-4 h-4 text-teal-500 animate-spin" style={{ animationDuration: '4s' }} />
-              <span>AI Orchestrated Healthcare Management System</span>
+              <span>{t('hero.badge', 'AI Orchestrated Healthcare Management System')}</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto leading-tight">
-              Healthcare Access Portal
+              {t('hero.title', 'Healthcare Access Portal')}
             </h1>
           </div>
 
