@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User profiles with role-based access for Patient, Doctor, and Admin domains",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["PATIENT", "DOCTOR", "ADMIN"] },
+        "createdAt": { "type": "string" },
+        "department": { "type": "string" },
+        "specialty": { "type": "string" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "appointments": {
+      "title": "Appointments",
+      "description": "Hospital patient appointments and triage records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patientId": { "type": "string" },
+        "patientName": { "type": "string" },
+        "patientAge": { "type": "number" },
+        "patientGender": { "type": "string" },
+        "patientContact": { "type": "string" },
+        "department": { "type": "string" },
+        "doctorId": { "type": "string" },
+        "doctorName": { "type": "string" },
+        "doctorSpecialty": { "type": "string" },
+        "date": { "type": "string" },
+        "timeSlot": { "type": "string" },
+        "priority": { "type": "string" },
+        "status": { "type": "string" },
+        "symptomSummary": { "type": "string" },
+        "bedAssigned": { "type": "string" }
+      },
+      "required": ["patientName", "department", "date", "status"]
+    },
+    "doctors": {
+      "title": "Doctors",
+      "description": "Doctor directory and shift availability",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "specialty": { "type": "string" },
+        "department": { "type": "string" },
+        "avatar": { "type": "string" },
+        "isAvailable": { "type": "boolean" },
+        "currentPatientsCount": { "type": "number" },
+        "maxPatientsPerDay": { "type": "number" },
+        "rating": { "type": "number" },
+        "experienceYears": { "type": "number" },
+        "roomNumber": { "type": "string" }
+      },
+      "required": ["name", "specialty", "department"]
+    },
+    "beds": {
+      "title": "Beds",
+      "description": "Hospital bed matrix and real-time occupancy status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "type": { "type": "string" },
+        "wing": { "type": "string" },
+        "floor": { "type": "number" },
+        "status": { "type": "string" },
+        "currentPatientName": { "type": "string" },
+        "assignedDoctorName": { "type": "string" },
+        "admissionDate": { "type": "string" }
+      },
+      "required": ["code", "type", "wing", "status"]
+    },
+    "reminders": {
+      "title": "Medicine Reminders",
+      "description": "Patient medicine dosage reminders",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "medicineName": { "type": "string" },
+        "dosage": { "type": "string" },
+        "timeSlot": { "type": "string" },
+        "takenToday": { "type": "boolean" },
+        "notes": { "type": "string" }
+      },
+      "required": ["medicineName", "dosage", "timeSlot"]
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "System and triage notifications",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "time": { "type": "string" },
+        "type": { "type": "string" },
+        "read": { "type": "boolean" }
+      },
+      "required": ["title", "message", "type"]
+    }
+  }
+}

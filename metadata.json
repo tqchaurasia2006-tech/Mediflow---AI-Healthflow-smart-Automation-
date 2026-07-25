@@ -1,0 +1,8 @@
+{
+  "name": "Remix: MediFlow",
+  "description": "AI Orchestrated Healthcare Management System with intelligent patient triage, smart scheduling, doctor and admin dashboards, bed management, and medical AI assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
