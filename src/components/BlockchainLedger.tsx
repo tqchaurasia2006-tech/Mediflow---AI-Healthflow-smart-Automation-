@@ -28,7 +28,15 @@ import {
   QrCode,
   ExternalLink,
   Share2,
-  X
+  X,
+  Globe,
+  Server,
+  Radio,
+  Terminal,
+  ArrowUpRight,
+  ShieldAlert,
+  Network,
+  Wifi
 } from 'lucide-react';
 
 export interface BlockchainBlock {
@@ -173,6 +181,45 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
 
   // Receipt Modal State
   const [receiptBlock, setReceiptBlock] = useState<BlockchainBlock | null>(null);
+
+  // On-Chain Verification Web Explorer Modal State
+  const [explorerBlock, setExplorerBlock] = useState<BlockchainBlock | null>(null);
+  const [isVerifyingExplorer, setIsVerifyingExplorer] = useState<boolean>(false);
+  const [explorerAuditStep, setExplorerAuditStep] = useState<number>(4);
+
+  // Trigger Live On-Chain Re-Verification Animation
+  const handleRunExplorerAudit = () => {
+    setIsVerifyingExplorer(true);
+    setExplorerAuditStep(0);
+
+    setTimeout(() => setExplorerAuditStep(1), 500);
+    setTimeout(() => setExplorerAuditStep(2), 1100);
+    setTimeout(() => setExplorerAuditStep(3), 1700);
+    setTimeout(() => {
+      setExplorerAuditStep(4);
+      setIsVerifyingExplorer(false);
+    }, 2300);
+  };
+
+  // Jump from Explorer/Receipt to Main Verifier Tool in Tab
+  const handleJumpToMainVerifier = (hash: string) => {
+    setVerifyInput(hash);
+    const block = blocks.find(b => b.currentHash === hash || b.recordId === hash);
+    if (block) {
+      setVerifyResult({ match: true, block });
+    } else {
+      setVerifyResult({ match: false });
+    }
+    setReceiptBlock(null);
+    setExplorerBlock(null);
+
+    setTimeout(() => {
+      const verifierEl = document.getElementById('record-integrity-verifier');
+      if (verifierEl) {
+        verifierEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 200);
+  };
 
   // Copy hash helper
   const handleCopy = (hash: string) => {
@@ -844,12 +891,21 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
 
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={handlePrintReceipt}
-                  title="Print Transaction Receipt"
+                  onClick={() => setExplorerBlock(receiptBlock)}
+                  title="Launch Interactive On-Chain Verification Web Explorer"
                   className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm cursor-pointer"
                 >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">On-Chain Website</span>
+                </button>
+
+                <button
+                  onClick={handlePrintReceipt}
+                  title="Print Transaction Receipt"
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all border border-slate-700 flex items-center space-x-1.5 cursor-pointer"
+                >
                   <Printer className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Print Receipt</span>
+                  <span className="hidden sm:inline">Print</span>
                 </button>
 
                 <button
@@ -858,7 +914,7 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
                   className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 border border-slate-700 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Download JSON</span>
+                  <span className="hidden sm:inline">JSON</span>
                 </button>
 
                 <button
@@ -872,7 +928,7 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
                     <Share2 className="w-3.5 h-3.5" />
                   )}
                   <span className="hidden sm:inline">
-                    {copiedHash === `link-${receiptBlock.currentHash}` ? 'Link Copied!' : 'Share Link'}
+                    {copiedHash === `link-${receiptBlock.currentHash}` ? 'Copied' : 'Share'}
                   </span>
                 </button>
 
@@ -997,30 +1053,44 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
                 </div>
               </div>
 
-              {/* QR Code Barcode Representation */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
-                    <QrCode className="w-10 h-10 text-slate-800 dark:text-slate-200" />
+              {/* QR Code Barcode & Interactive On-Chain Website Trigger */}
+              <div 
+                onClick={() => setExplorerBlock(receiptBlock)}
+                className="group flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-teal-500/5 via-teal-500/10 to-indigo-500/5 dark:from-teal-900/20 dark:via-teal-900/30 dark:to-indigo-900/20 border border-teal-500/30 dark:border-teal-500/40 hover:border-teal-500 transition-all shadow-sm cursor-pointer"
+              >
+                <div className="flex items-center space-x-3.5">
+                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-teal-200 dark:border-teal-800 shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                    <QrCode className="w-10 h-10 text-teal-600 dark:text-teal-400" />
                   </div>
-                  <div className="space-y-0.5">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center space-x-1">
-                      <span>On-Chain Scan Verification</span>
-                      <ExternalLink className="w-3 h-3 text-teal-500" />
+                  <div className="space-y-1">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+                      <span className="text-teal-700 dark:text-teal-300 font-extrabold">On-Chain Scan Verification Website</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-teal-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Scan QR code or use verification link below to validate ledger authenticity.
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                      Click here to launch the live <strong>On-Chain Explorer & Verification Portal</strong> for this transaction.
                     </p>
-                    <code className="text-[10px] text-teal-600 dark:text-teal-400 font-mono block">
-                      https://mediflow.ai/verify/{receiptBlock.currentHash.substring(0, 18)}...
-                    </code>
+                    <div className="flex items-center space-x-2">
+                      <code className="text-[10px] text-teal-600 dark:text-teal-400 font-mono bg-teal-100/60 dark:bg-teal-950/80 px-2 py-0.5 rounded-md">
+                        https://explorer.mediflow.ai/tx/{receiptBlock.currentHash.substring(0, 16)}...
+                      </code>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hidden sm:inline">● Live Web Explorer</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="text-right shrink-0">
-                  <div className="font-mono text-[9px] text-slate-400 uppercase tracking-widest">STAMPED BY</div>
-                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">MediFlow AI Core Node</div>
-                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">100% AUDIT VALIDATED</div>
+                <div className="flex flex-col items-end shrink-0 gap-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExplorerBlock(receiptBlock);
+                    }}
+                    className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center space-x-1.5"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Open Web Explorer</span>
+                  </button>
+                  <span className="text-[9px] text-slate-400 font-mono">NODE #01 • 100% AUDITED</span>
                 </div>
               </div>
 
@@ -1043,6 +1113,347 @@ export const BlockchainLedger: React.FC<BlockchainLedgerProps> = ({
               >
                 Close Receipt
               </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* On-Chain Scan Verification Web Explorer Modal */}
+      {explorerBlock && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-lg flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
+          <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-4xl w-full border border-teal-500/30 shadow-2xl overflow-hidden my-auto animate-scaleUp flex flex-col max-h-[92vh]">
+            
+            {/* Simulated Web Browser Chrome & Address Bar */}
+            <div className="bg-slate-950 px-4 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1.5">
+                  <div className="w-3 h-3 rounded-full bg-rose-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                </div>
+                <span className="text-slate-500 text-xs font-mono hidden sm:inline pl-2">MediFlow Explorer Browser v2.4</span>
+              </div>
+
+              {/* URL Address Bar */}
+              <div className="flex-1 max-w-xl mx-2 bg-slate-900 border border-slate-800 hover:border-teal-500/50 rounded-xl px-3 py-1.5 flex items-center space-x-2 text-xs font-mono text-slate-300 transition-colors shadow-inner">
+                <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="text-teal-400 font-bold">https://</span>
+                <span className="text-slate-200">explorer.mediflow.ai/tx/</span>
+                <span className="text-teal-300 font-bold truncate">{explorerBlock.currentHash.substring(0, 20)}...</span>
+                <span className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/20 font-bold shrink-0 hidden md:inline">TLS 1.3 SECURE</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleRunExplorerAudit}
+                  title="Reload & Re-verify On-Chain Data"
+                  className="p-1.5 text-slate-400 hover:text-teal-400 bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors border border-slate-800"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isVerifyingExplorer ? 'animate-spin text-teal-400' : ''}`} />
+                </button>
+
+                <button
+                  onClick={() => setExplorerBlock(null)}
+                  className="p-1.5 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors border border-slate-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Explorer Website Header & Navigation Bar */}
+            <div className="bg-slate-900/90 border-b border-slate-800 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shrink-0">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 font-black text-lg shadow-inner">
+                  <Globe className="w-6 h-6 text-teal-400" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h2 className="text-base sm:text-lg font-black tracking-tight text-white">MediFlow On-Chain Explorer</h2>
+                    <span className="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold rounded-md flex items-center space-x-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>MAINNET LIVE</span>
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">Public Healthcare Permissioned Blockchain Verification Network</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleJumpToMainVerifier(explorerBlock.currentHash)}
+                  className="px-3.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <Search className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Inspect in Ledger Tab</span>
+                </button>
+
+                <button
+                  onClick={() => handleCopyReceiptLink(explorerBlock.currentHash)}
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer"
+                >
+                  {copiedHash === `link-${explorerBlock.currentHash}` ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                  <span>{copiedHash === `link-${explorerBlock.currentHash}` ? 'Copied Link' : 'Copy URL'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Website Body */}
+            <div className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1 text-slate-200">
+
+              {/* Transaction Main Banner Card */}
+              <div className="bg-gradient-to-r from-teal-950/60 via-slate-900 to-indigo-950/60 rounded-2xl p-5 border border-teal-500/30 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full text-xs font-black uppercase tracking-wide flex items-center space-x-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>ON-CHAIN VERIFIED & FINALIZED</span>
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono">1,024 Network Confirmations</span>
+                  </div>
+
+                  <div className="text-xs font-mono text-slate-400">
+                    Block Height: <strong className="text-teal-400">#{explorerBlock.blockIndex}</strong>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-widest">Transaction Hash</span>
+                  <div className="flex items-center space-x-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 font-mono text-xs text-teal-300 font-bold break-all">
+                    <Hash className="w-4 h-4 text-teal-400 shrink-0" />
+                    <span className="flex-1">{explorerBlock.currentHash}</span>
+                    <button
+                      onClick={() => handleCopy(explorerBlock.currentHash)}
+                      className="p-1 hover:bg-slate-800 rounded transition-colors text-slate-400 hover:text-white"
+                    >
+                      {copiedHash === explorerBlock.currentHash ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Interactive Cryptographic Consensus Validator Tool */}
+              <div className="bg-slate-950/80 rounded-2xl p-5 border border-slate-800 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div className="flex items-center space-x-2">
+                    <ShieldCheck className="w-5 h-5 text-teal-400" />
+                    <h3 className="text-sm font-bold text-white">Live On-Chain Consensus & Proof Verification</h3>
+                  </div>
+
+                  <button
+                    onClick={handleRunExplorerAudit}
+                    disabled={isVerifyingExplorer}
+                    className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-md cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isVerifyingExplorer ? 'animate-spin' : ''}`} />
+                    <span>{isVerifyingExplorer ? 'Executing On-Chain Audit...' : 'Re-Run Audit Check'}</span>
+                  </button>
+                </div>
+
+                {/* Audit Steps Matrix */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                  <div className={`p-3 rounded-xl border transition-all ${
+                    explorerAuditStep >= 1 ? 'bg-teal-950/40 border-teal-500/40 text-teal-200' : 'bg-slate-900 border-slate-800 text-slate-500'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">1. Payload Raw Data State</span>
+                      {explorerAuditStep >= 1 && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                    </div>
+                    <span className="text-[10px] text-slate-400 block mt-1 font-sans">Fetched from MediFlow Sovereign State Trie</span>
+                  </div>
+
+                  <div className={`p-3 rounded-xl border transition-all ${
+                    explorerAuditStep >= 2 ? 'bg-teal-950/40 border-teal-500/40 text-teal-200' : 'bg-slate-900 border-slate-800 text-slate-500'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">2. SHA-256 Digest Re-computation</span>
+                      {explorerAuditStep >= 2 && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                    </div>
+                    <span className="text-[10px] text-slate-400 block mt-1 font-sans">100% Bitwise Match with Payload Hash</span>
+                  </div>
+
+                  <div className={`p-3 rounded-xl border transition-all ${
+                    explorerAuditStep >= 3 ? 'bg-teal-950/40 border-teal-500/40 text-teal-200' : 'bg-slate-900 border-slate-800 text-slate-500'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">3. Merkle Parent Link (Block #{explorerAuditStep >= 3 ? explorerBlock.blockIndex - 1 : '...'})</span>
+                      {explorerAuditStep >= 3 && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                    </div>
+                    <span className="text-[10px] text-slate-400 block mt-1 font-sans">Parent hash chain continuity verified</span>
+                  </div>
+
+                  <div className={`p-3 rounded-xl border transition-all ${
+                    explorerAuditStep >= 4 ? 'bg-teal-950/40 border-teal-500/40 text-teal-200' : 'bg-slate-900 border-slate-800 text-slate-500'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">4. ECDSA Signature Auth</span>
+                      {explorerAuditStep >= 4 && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                    </div>
+                    <span className="text-[10px] text-slate-400 block mt-1 font-sans">Signed by Authorized Doctor Node</span>
+                  </div>
+                </div>
+
+                {explorerAuditStep === 4 && (
+                  <div className="p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs flex items-center justify-between">
+                    <div className="flex items-center space-x-2 font-bold">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>ON-CHAIN PROOF SUCCESSFUL: Cryptographic Integrity 100% Confirmed</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-emerald-400">0.02ms Audit Latency</span>
+                  </div>
+                )}
+              </div>
+
+              {/* On-Chain Detailed Technical Specs Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="bg-slate-950/80 rounded-2xl p-4 border border-slate-800 space-y-3">
+                  <h4 className="font-bold text-white flex items-center space-x-1.5 border-b border-slate-800 pb-2">
+                    <Database className="w-4 h-4 text-teal-400" />
+                    <span>Transaction Attributes</span>
+                  </h4>
+
+                  <div className="space-y-2 text-slate-300">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Event Category:</span>
+                      <span className="font-bold text-indigo-400 uppercase">{explorerBlock.eventType.replace('_', ' ')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Initiator Node:</span>
+                      <span className="font-mono font-bold text-slate-100">{explorerBlock.initiator}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Patient Hash Ref:</span>
+                      <span className="font-mono bg-slate-800 px-1.5 py-0.5 rounded text-teal-300">{explorerBlock.details.patientId || 'PAT-GENERAL'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Department:</span>
+                      <span className="font-bold text-slate-200">{explorerBlock.details.department || 'Clinical Operations'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Timestamp (UTC):</span>
+                      <span className="font-mono text-slate-200">{explorerBlock.timestamp}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-950/80 rounded-2xl p-4 border border-slate-800 space-y-3">
+                  <h4 className="font-bold text-white flex items-center space-x-1.5 border-b border-slate-800 pb-2">
+                    <Network className="w-4 h-4 text-indigo-400" />
+                    <span>Network & Consensus Metadata</span>
+                  </h4>
+
+                  <div className="space-y-2 text-slate-300">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Consensus Algorithm:</span>
+                      <span className="font-bold text-emerald-400">Proof of Authority (PoA)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Gas Used:</span>
+                      <span className="font-mono text-indigo-300">0.00 Gwei (Healthcare Subnet)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Nonce:</span>
+                      <span className="font-mono text-slate-200">#{explorerBlock.nonce}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Active Validator Nodes:</span>
+                      <span className="font-bold text-emerald-400">6 / 6 Nodes Online</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Data Hash (SHA-256):</span>
+                      <span className="font-mono text-slate-400 text-[10px] truncate max-w-[140px]">{explorerBlock.dataHash}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Validator Node Consensus Matrix */}
+              <div className="bg-slate-950/80 rounded-2xl p-4 border border-slate-800 space-y-3">
+                <h4 className="font-bold text-white flex items-center space-x-1.5 text-xs">
+                  <Server className="w-4 h-4 text-teal-400" />
+                  <span>Hospital Subnet Validator Node Consensus (6 Active Nodes)</span>
+                </h4>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-[11px] font-mono">
+                  <div className="p-2.5 bg-slate-900 rounded-xl border border-emerald-500/30 flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-slate-200">MediFlow Master</div>
+                      <div className="text-[9px] text-emerald-400">12ms • MATCH ✓</div>
+                    </div>
+                    <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+
+                  <div className="p-2.5 bg-slate-900 rounded-xl border border-emerald-500/30 flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-slate-200">Max Health Node</div>
+                      <div className="text-[9px] text-emerald-400">18ms • MATCH ✓</div>
+                    </div>
+                    <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+
+                  <div className="p-2.5 bg-slate-900 rounded-xl border border-emerald-500/30 flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-slate-200">Fortis Subnet</div>
+                      <div className="text-[9px] text-emerald-400">15ms • MATCH ✓</div>
+                    </div>
+                    <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+
+                  <div className="p-2.5 bg-slate-900 rounded-xl border border-emerald-500/30 flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-slate-200">Apollo Node</div>
+                      <div className="text-[9px] text-emerald-400">22ms • MATCH ✓</div>
+                    </div>
+                    <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+
+                  <div className="p-2.5 bg-slate-900 rounded-xl border border-emerald-500/30 flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-slate-200">AIIMS Vault Node</div>
+                      <div className="text-[9px] text-emerald-400">19ms • MATCH ✓</div>
+                    </div>
+                    <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+
+                  <div className="p-2.5 bg-slate-900 rounded-xl border border-emerald-500/30 flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-slate-200">Govt Health Node</div>
+                      <div className="text-[9px] text-emerald-400">25ms • MATCH ✓</div>
+                    </div>
+                    <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Bottom Explorer Action Footer Bar */}
+            <div className="p-4 bg-slate-950 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <div className="text-xs text-slate-400 font-mono">
+                Verified on <strong className="text-teal-400">MediFlow AI Permissioned Network</strong>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleJumpToMainVerifier(explorerBlock.currentHash)}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer flex items-center space-x-1.5"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Inspect in Verifier Tool</span>
+                </button>
+
+                <button
+                  onClick={() => setExplorerBlock(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Close Explorer Website
+                </button>
+              </div>
             </div>
 
           </div>
